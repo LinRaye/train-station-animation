@@ -168,21 +168,49 @@
           return;
         }
 
-        var extraFeature = {
-          "type": "Feature",
-          "geometry": {
-            "type": "Point",
-            "coordinates": [121.46202, 23.80259]
-          },
-          "properties": {
-            "站名": "林榮新光站",
-            "緯度": 23.80259,
-            "經度": 121.46202
-          }
-        };
-        
+        const extraFeature = [
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [121.10972, 24.97442] }, "properties": { "站名": "鳳鳴站", "緯度": 24.97442, "經度": 121.10972 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [121.06722, 24.93111] }, "properties": { "站名": "新富站", "緯度": 24.93111, "經度": 121.06722 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.70861, 24.23444] }, "properties": { "站名": "栗林站", "緯度": 24.23444, "經度": 120.70861 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.70389, 24.18667] }, "properties": { "站名": "頭家厝站", "緯度": 24.18667, "經度": 120.70389 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.71583, 24.22556] }, "properties": { "站名": "松竹站", "緯度": 24.22556, "經度": 120.71583 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.69667, 24.14917] }, "properties": { "站名": "精武站", "緯度": 24.14917, "經度": 120.69667 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.66750, 24.12556] }, "properties": { "站名": "五權站", "緯度": 24.12556, "經度": 120.66750 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.59722, 24.30667] }, "properties": { "站名": "台中港站", "緯度": 24.30667, "經度": 120.59722 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.2781175, 22.6624025] }, "properties": { "站名": "內惟站", "緯度": 22.6624025, "經度": 120.2781175 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.281477, 22.652597806] }, "properties": { "站名": "美術館", "緯度": 22.652597806, "經度": 120.281477 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.279444, 22.648611] }, "properties": { "站名": "鼓山站", "緯度": 22.648611, "經度": 120.279444 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.29139, 22.63917] }, "properties": { "站名": "三塊厝站", "緯度": 22.63917, "經度": 120.29139 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.315037389, 22.638792694] }, "properties": { "站名": "民族站", "緯度": 22.638792694, "經度": 120.315037389 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.326189306, 22.637052889] }, "properties": { "站名": "科工館站", "緯度": 22.637052889, "經度": 120.326189306 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.343056, 22.623333] }, "properties": { "站名": "正義站", "緯度": 22.623333, "經度": 120.343056 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [121.507333, 23.859583] }, "properties": { "站名": "林榮", "緯度": 23.859583, "經度": 121.507333 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [121.507333, 23.859583] }, "properties": { "站名": "新光", "緯度": 23.859583, "經度": 121.507333 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.45528, 23.48778] }, "properties": { "站名": "北門", "緯度": 23.48778, "經度": 120.45528 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.5314671507378, 23.504228446393917] }, "properties": { "站名": "鹿麻產", "緯度": 23.504228446393917, "經度": 120.5314671507378 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.55357483497394, 23.52590971055063] }, "properties": { "站名": "竹崎", "緯度": 23.52590971055063, "經度": 120.55357483497394 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.65952806, 23.50438889] }, "properties": { "站名": "木履寮", "緯度": 23.50438889, "經度": 120.65952806 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.60444, 23.53500] }, "properties": { "站名": "樟腦寮", "緯度": 23.53500, "經度": 120.60444 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.60917, 23.53583] }, "properties": { "站名": "獨立山", "緯度": 23.53583, "經度": 120.60917 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.62022194, 23.54219389] }, "properties": { "站名": "梨園寮", "緯度": 23.54219389, "經度": 120.62022194 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.64139, 23.53444] }, "properties": { "站名": "交力坪", "緯度": 23.53444, "經度": 120.64139 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.65583, 23.50028] }, "properties": { "站名": "水社寮", "緯度": 23.50028, "經度": 120.65583 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.69472, 23.50500] }, "properties": { "站名": "奮起湖", "緯度": 23.50500, "經度": 120.69472 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.72806, 23.49917] }, "properties": { "站名": "多林", "緯度": 23.49917, "經度": 120.72806 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.75306, 23.48833] }, "properties": { "站名": "十字路", "緯度": 23.48833, "經度": 120.75306 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.78861, 23.51111] }, "properties": { "站名": "二萬平", "緯度": 23.51111, "經度": 120.78861 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.817, 23.5088] }, "properties": { "站名": "神木", "緯度": 23.5088, "經度": 120.817 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.804219476, 23.509983220275636] }, "properties": { "站名": "阿里山", "緯度": 23.509983220275636, "經度": 120.804219476 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.81250, 23.51194] }, "properties": { "站名": "沼平", "緯度": 23.51194, "經度": 120.81250 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.819972, 23.517083] }, "properties": { "站名": "對高岳", "緯度": 23.517083, "經度": 120.819972 } },
+          { "type": "Feature", "geometry": { "type": "Point", "coordinates": [120.823000, 23.510250] }, "properties": { "站名": "祝山", "緯度": 23.510250, "經度": 120.823000 } }
+        ]
+
+
         // add this item into features
-        features.push(extraFeature);
+        for (const ef of extraFeature) {
+          features.push(ef);
+        }
         // 逐一處理 feature
         features.forEach((f, idx) => {
           let coords = null;
@@ -237,10 +265,11 @@
           const sNorm = String(sname).replace(/站/g, '').replace(/\s+/g, '').toLowerCase();
           const found = stationMarkers.find(e => e.nameNorm.includes(sNorm) || sNorm.includes(e.nameNorm));
 
+          console.log('Mapping list item', sname, 'to', found ? found.rawName : 'NOT FOUND');
           if (!found) {
             item.classList.add('disabled');
             item.title = '未在資料中找到對應座標';
-            console.log(sname);
+            console.log("-->", sname);
           } else {
             item.addEventListener('click', () => {
               let latlng = found.marker.getLatLng();
@@ -291,6 +320,7 @@
                 autoplayIndex++;
                 attempts++;
                 const it = listItems[idx];
+                console.log('Autoplay trying item', idx, it.textContent, it.classList.contains('disabled') ? 'disabled' : 'enabled');
                 if (!it.classList.contains('disabled')) {
                   it.click(); // 觸發既有的 click 行為（置中 + 開 popup）
                   listItems.forEach(li => li.classList.remove('playing'));
