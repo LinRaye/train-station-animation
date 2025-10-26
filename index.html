@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>全台灣車站地圖 — OpenStreetMap + Leaflet</title>
+  <!-- Leaflet CSS -->
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+  <!-- MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <style>
+    html,
+    body,
+    #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .legend {
+      background: white;
+      padding: 6px 8px;
+      border-radius: 6px;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+    }
+
+    /* 右側浮動清單樣式 */
+    #station-panel {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      width: 320px;
+      max-height: calc(100% - 24px);
+      overflow: auto;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #e6e6e6;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+      padding: 8px;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      z-index: 1000;
+      /* 在地圖之上 */
+      scroll-behavior: smooth;
+      /* keep list smoothly scrolling into view */
+    }
+
+    #station-panel h3 {
+      margin: 6px 0 8px 0;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .station-item {
+      padding: 8px 10px;
+      border-bottom: 1px dashed #eee;
+      font-size: 15px;
+      /* increased label font size */
+      cursor: pointer;
+      user-select: none;
+      line-height: 1.3;
+    }
+
+    .station-item:hover {
+      background: #f3f4f6;
+    }
+
+    .station-item.disabled {
+      color: #9aa0a6;
+      cursor: default;
+      background: transparent;
+    }
+
+    /* Make popup text bigger and slightly bolder for readability */
+    .leaflet-popup-content {
+      font-size: 48px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    /* Optional: increase popup max-width so long names wrap nicely */
+    .leaflet-popup-content-wrapper {
+      max-width: 240px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <!-- 右側浮動清單（由 JS 填充） -->
+  <div id="station-panel" aria-hidden="false" role="region">
+    <h3>車站清單 <button id="autoplay-btn" type="button">自動播放</button></h3>
+    <div id="station-list">載入中…</div>
+  </div>
+  <style>
+    /* small styles for autoplay button and current playing item */
+    #autoplay-btn {
+      margin-left: 8px;
+      font-size: 12px;
+      padding: 4px 8px;
+    }
+
+    .station-item.playing {
+      background: #fff1c6;
+      border-left: 3px solid #f59e0b;
+    }
+  </style>
+
+  <!-- Leaflet JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <!-- MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <script>
+    // 資料來源（GeoJSON）：請求至 GitHub raw 檔案
+    const STATIONS_URL = 'https://raw.githubusercontent.com/repeat/taiwan-railway-stations/refs/heads/master/station.json';
+
+    // 指定順序清單（使用者提供）
+    const stationOrder = [
+      '基隆站', '三坑站', '八堵站', '七堵站', '百福站', '五堵站', '汐止站', '汐科站', '南港站', '松山站', '臺北站', '萬華站', '板橋站', '浮洲站', '樹林站', '南樹林', '山佳站', '鶯歌站', '鳳鳴站', '桃園站', '內壢站', '中壢站', '埔心站', '楊梅站', '富岡站', '新富站', '北湖站', '湖口站', '新豐站', '竹北站', '北新竹站', '新竹站', '三姓橋', '香山站', '崎頂站', '竹南站', '造橋站', '豐富站', '苗栗站', '南勢站', '銅鑼站', '三義站', '泰安站', '后里站', '豐原站', '栗林站', '潭子站', '頭家厝站', '松竹站', '太原站', '精武站', '臺中站', '五權站', '大慶站', '烏日站', '新烏日站', '成功站', '彰化站', '談文站', '大山站', '後龍站', '龍港站', '白沙屯站', '新埔站', '通霄站', '苑裡站', '日南站', '大甲站', '台中港站', '清水站', '沙鹿站', '龍井站', '大肚站', '追分站', '彰化站', '花壇站', '大村站', '員林站', '永靖站', '社頭站', '田中站', '二水站', '林內站', '石榴站', '斗六站', '斗南站', '石龜站', '大林站', '民雄站', '嘉北站', '嘉義站', '水上站', '南靖站', '後壁站', '新營站', '柳營站', '林鳳營站', '隆田站', '拔林站', '善化站', '南科站', '新市站', '永康站', '大橋站', '臺南站', '保安站', '仁德站', '中洲站', '大湖站', '路竹站', '岡山站', '橋頭站', '楠梓站', '新左營站', '左營站', '內惟站', '美術館', '鼓山站', '三塊厝站', '高雄站', '民族站', '科工館站', '正義站', '鳳山站', '後庄站', '九曲堂站', '六塊厝站', '屏東站', '歸來站', '麟洛站', '西勢站', '竹田站', '潮州站', '崁頂站', '南州站', '鎮安', '林邊', '佳冬', '東海', '枋寮', '加祿', '內獅', '枋山', '大武', '瀧瀧溪', '金崙', '太麻里', '知本', '康樂', '臺東', '山里', '鹿野', '瑞源', '瑞和', '關山', '海端', '池上', '富里', '東竹', '東里', '玉里', '三民', '瑞穗', '富源', '大富', '光復', '萬榮', '鳳林', '南平', '林榮', '新光', '豐田', '壽豐', '平和', '志學', '吉安', '花蓮', '北埔', '景美', '新城', '崇德', '和仁', '和平', '漢本', '武塔', '南澳', '東澳', '永樂', '蘇澳新', '蘇澳', '新馬', '冬山', '羅東', '中里', '二結', '宜蘭', '四城', '礁溪', '頂埔', '頭城', '外澳', '龜山', '大溪', '大里', '石城', '福隆', '貢寮', '雙溪', '牡丹', '三貂嶺', '猴硐', '瑞芳', '四腳亭', '暖暖', '瑞芳', '海科館', '八斗子', '三貂嶺', '大華', '十分', '望古', '嶺腳', '平溪', '菁桐', '北新竹', '千甲', '新莊', '竹中', '六家', '上員', '榮華', '竹東', '橫山', '九讚頭', '合興', '富貴', '內灣', '二水', '源泉', '濁水', '龍泉', '集集', '水里', '車埕', '中洲', '長榮大學', '沙崙', '北門', '鹿麻產', '竹崎', '木履寮', '樟腦寮', '獨立山', '梨園寮', '交力坪', '水社寮', '奮起湖', '多林', '十字路', '二萬平', '神木', '阿里山', '沼平', '對高岳', '祝山'
+    ];
+
+    // 建立地圖，中心對準台灣
+    const map = L.map('map').setView([23.7, 120.98], 7);
+
+    // OpenStreetMap 磁磚圖層
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // 建立 marker cluster group
+    const markers = L.markerClusterGroup();
+    // 用於快速對應名稱 => marker
+    const stationMarkers = []; // {nameNorm: string, marker: L.Marker}
+
+    // 簡單錯誤處理與載入提示
+    let loading = L.control({ position: 'topright' });
+    loading.onAdd = function () {
+      const div = L.DomUtil.create('div', 'legend');
+      div.id = 'loadingBox';
+      div.innerHTML = '載入車站資料...';
+      return div;
+    };
+    loading.addTo(map);
+
+    fetch(STATIONS_URL)
+      .then(resp => {
+        if (!resp.ok) throw new Error('Network response was not ok: ' + resp.status);
+        return resp.json();
+      })
+      .then(data => {
+        let features = [];
+        if (data.type && data.type.toLowerCase() === 'featurecollection' && Array.isArray(data.features)) {
+          features = data.features;
+        } else if (Array.isArray(data)) {
+          features = data;
+        } else if (data.features) {
+          features = data.features;
+        } else {
+          console.warn('Unrecognized JSON structure for stations data:', data);
+        }
+
+        if (features.length === 0) {
+          document.getElementById('loadingBox').innerText = '找不到任何車站資料。';
+          return;
+        }
+
+        var extraFeature = {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [121.46202, 23.80259]
+          },
+          "properties": {
+            "站名": "林榮新光站",
+            "緯度": 23.80259,
+            "經度": 121.46202
+          }
+        };
+        
+        // add this item into features
+        features.push(extraFeature);
+        // 逐一處理 feature
+        features.forEach((f, idx) => {
+          let coords = null;
+          if (f.geometry && Array.isArray(f.geometry.coordinates)) coords = f.geometry.coordinates;
+          if (!coords && f.lat && f.lon) coords = [parseFloat(f.lon), parseFloat(f.lat)];
+          if (!coords && f.location && f.location.coordinates) coords = f.location.coordinates;
+          if (!coords || coords.length < 2) return;
+
+          const lon = parseFloat(coords[0]);
+          const lat = parseFloat(coords[1]);
+
+          // 取得站名（嘗試多欄位）
+          let pname = null;
+          if (f.properties && f.properties['站名']) pname = f.properties['站名'];
+          else if (f.name) pname = f.name;
+          else if (f.properties && (f.properties.name_zh || f.properties.name_zh_tw)) pname = f.properties.name_zh || f.properties.name_zh_tw;
+          if (!pname) pname = `車站 #${idx + 1}`;
+
+          const safeName = escapeHtml(String(pname));
+          const popupHtml = `<strong>${safeName}</strong>`;
+
+          const m = L.marker([lat, lon]);
+          m.bindPopup(popupHtml);
+          markers.addLayer(m);
+
+          // 儲存對應（規格化名稱以便比對）
+          const nameNorm = String(pname).replace(/站/g, '').replace(/\s+/g, '').toLowerCase();
+          stationMarkers.push({ nameNorm, marker: m, rawName: pname });
+        });
+
+        map.addLayer(markers);
+
+        // 移除載入提示
+        const box = document.getElementById('loadingBox');
+        if (box) box.innerText = `載入完成： ${markers.getLayers().length} 個車站`;
+
+        // 縮放到包含所有標記
+        try {
+          const group = markers.getBounds();
+          if (group.isValid()) map.fitBounds(group.pad(0.08));
+        } catch (e) { /* ignore */ }
+
+        // 建立右側清單（依 stationOrder 的順序）
+        const listRoot = document.getElementById('station-list');
+        listRoot.innerHTML = ''; // clear
+        const listItems = [];
+        stationOrder.forEach(sname => {
+          const item = document.createElement('div');
+          item.className = 'station-item';
+          item.textContent = sname;
+
+          const sNorm = String(sname).replace(/站/g, '').replace(/\s+/g, '').toLowerCase();
+          const found = stationMarkers.find(e => e.nameNorm.includes(sNorm) || sNorm.includes(e.nameNorm));
+
+          if (!found) {
+            item.classList.add('disabled');
+            item.title = '未在資料中找到對應座標';
+            console.log(sname);
+          } else {
+            item.addEventListener('click', () => {
+              let latlng = found.marker.getLatLng();
+              map.setView(latlng, 15);
+              +              // ensure the clicked item stays visible in the panel while the map moves
+                +              item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // 更新 latlng 為地圖中心（在移動結束後），並在中心後打開 popup
+              map.once('moveend', () => {
+                latlng = map.getCenter();
+                found.marker.openPopup();
+              });
+              // 小技巧：在群集內，若 marker 被叢集包裹，先展開該群集
+              // 若 marker 不在視野，先確保 cluster 展開到該 marker
+              if (markers.hasLayer(found.marker)) {
+                // no-op; openPopup will run after moveend
+              }
+            });
+          }
+
+          listRoot.appendChild(item);
+          listItems.push(item);
+        });
+
+        // 自動播放功能：逐一選取清單上的車站
+        (function () {
+          const autoplayBtn = document.getElementById('autoplay-btn');
+          if (!autoplayBtn) return;
+          let autoplayTimer = null;
+          let autoplayIndex = 0;
+
+          function stopAuto() {
+            if (autoplayTimer) {
+              clearInterval(autoplayTimer);
+              autoplayTimer = null;
+            }
+            autoplayBtn.textContent = '自動播放';
+            listItems.forEach(li => li.classList.remove('playing'));
+          }
+
+          function startAuto(interval = 700) {
+            if (listItems.length === 0) return;
+            autoplayBtn.textContent = '停止';
+            autoplayIndex = 0;
+            autoplayTimer = setInterval(() => {
+              let attempts = 0;
+              while (attempts < listItems.length) {
+                const idx = autoplayIndex % listItems.length;
+                autoplayIndex++;
+                attempts++;
+                const it = listItems[idx];
+                if (!it.classList.contains('disabled')) {
+                  it.click(); // 觸發既有的 click 行為（置中 + 開 popup）
+                  listItems.forEach(li => li.classList.remove('playing'));
+                  it.classList.add('playing');
+                  break;
+                }
+              }
+              if (attempts >= listItems.length) stopAuto();
+            }, interval);
+          }
+
+          autoplayBtn.addEventListener('click', () => {
+            if (autoplayTimer) stopAuto();
+            else startAuto(700);
+          });
+
+          // 使用者互動時自動停止（避免干擾）
+          // map.on('movestart zoomstart click', () => {
+          //   if (autoplayTimer) stopAuto();
+          // });
+        })();
+
+      })
+      .catch(err => {
+        console.error(err);
+        const box = document.getElementById('loadingBox');
+        if (box) box.innerText = '載入車站資料失敗：' + err.message;
+      });
+
+    // 小工具：轉義 HTML（避免 XSS）
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+
+</html>
