@@ -263,7 +263,7 @@
           item.textContent = sname;
 
           const sNorm = String(sname).replace(/站/g, '').replace(/\s+/g, '').toLowerCase();
-          const found = stationMarkers.find(e => e.nameNorm.includes(sNorm) || sNorm.includes(e.nameNorm));
+          const found = stationMarkers.find(e => e.nameNorm==sNorm);
 
           console.log('Mapping list item', sname, 'to', found ? found.rawName : 'NOT FOUND');
           if (!found) {
@@ -274,13 +274,13 @@
             item.addEventListener('click', () => {
               let latlng = found.marker.getLatLng();
               map.setView(latlng, 15);
-              +              // ensure the clicked item stays visible in the panel while the map moves
-                +              item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // ensure the clicked item stays visible in the panel while the map moves
+              item.scrollIntoView({ behavior: 'smooth', block: 'center' });
               // 更新 latlng 為地圖中心（在移動結束後），並在中心後打開 popup
-              map.once('moveend', () => {
+              setTimeout(() => {
+                  found.marker.openPopup();
                 latlng = map.getCenter();
-                found.marker.openPopup();
-              });
+              }, 300);
               // 小技巧：在群集內，若 marker 被叢集包裹，先展開該群集
               // 若 marker 不在視野，先確保 cluster 展開到該 marker
               if (markers.hasLayer(found.marker)) {
@@ -292,6 +292,31 @@
           listRoot.appendChild(item);
           listItems.push(item);
         });
+
+        // Append any stations that exist in stationMarkers but were not listed in stationOrder
+        (function appendUnlistedStations() {
+          const added = new Set(listItems.map(it =>
+            String(it.textContent).replace(/站/g, '').replace(/\s+/g, '').toLowerCase()
+          ));
+          for (const sm of stationMarkers) {
+            if (added.has(sm.nameNorm)) continue;
+            const item = document.createElement('div');
+            item.className = 'station-item';
+            item.textContent = sm.rawName;
+            item.addEventListener('click', () => {
+              let latlng = sm.marker.getLatLng();
+              map.setView(latlng, 15);
+              item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              map.once('moveend', () => {
+                latlng = map.getCenter();
+                sm.marker.openPopup();
+              });
+            });
+            listRoot.appendChild(item);
+            listItems.push(item);
+            added.add(sm.nameNorm);
+          }
+        })();
 
         // 自動播放功能：逐一選取清單上的車站
         (function () {
